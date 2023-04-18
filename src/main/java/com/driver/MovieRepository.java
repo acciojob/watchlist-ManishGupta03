@@ -1,109 +1,114 @@
 package com.driver;
 
 import org.springframework.stereotype.Repository;
+
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 @Repository
 public class MovieRepository {
-    private HashMap<String,Movie>movieMap;
 
-    public HashMap<String, Movie> getMovieMap() {
-        return movieMap;
-    }
+    HashMap<String,Movie>Mdb=new HashMap<>();
+    HashMap<String,Director>Ddb=new HashMap<>();
+    HashMap<String, List<String>>Pdb=new HashMap<>();
 
-    public void setMovieMap(HashMap<String, Movie> movieMap) {
-        this.movieMap = movieMap;
+    public String addMovie(Movie movie)
+    {
+        String name=movie.getName();
+        Mdb.put(name,movie);
+        return "Movie added successfully";
     }
-
-    public HashMap<String, Director> getDirectorMap() {
-        return directorMap;
+    public String addDirector(Director director)
+    {
+        String name=director.getName();
+        Ddb.put(name,director);
+        return "Director added successfully";
     }
-
-    public void setDirectorMap(HashMap<String, Director> directorMap) {
-        this.directorMap = directorMap;
+    public String addMovieDirectorPair(String nameM,String nameD) {
+        if(!Mdb.containsKey(nameM) || !Ddb.containsKey(nameD)) return "Movie or Director not found in database";
+        List<String>ml = Pdb.getOrDefault(nameD, new ArrayList<>());
+        if(ml.contains(nameM)) return "Pair already exists";
+        ml.add(nameM);
+        Pdb.put(nameD,ml);
+        return "Pair added successfully";
     }
-
-    public HashMap<String,List<String>> getMovieDirector() {
-        return movieDirector;
+    public Movie getMovieByName(String nameM)
+    {
+        if(Mdb.containsKey(nameM))
+        {
+            return Mdb.get(nameM);
+        }
+        return null ;
     }
-
-    public void setMovieDirector(HashMap<String, List<String>> movieDirector) {
-        this.movieDirector = movieDirector;
+    public Director getDirectorByName(String nameD)
+    {
+        if(Ddb.containsKey(nameD))
+        {
+            return Ddb.get(nameD);
+        }
+        return null;
     }
-
-    private HashMap<String,Director>directorMap;
-    private HashMap<String,List<String>>movieDirector;
-
-    public MovieRepository() {
-        this.movieMap = new HashMap<String,Movie>();
-        this.directorMap = new HashMap<String,Director>();
-        this.movieDirector =new HashMap<String,List<String>>();
+    public List<String> getMoviesByDirectorName(String nameD)
+    {
+        if(Pdb.containsKey(nameD))
+        {
+            return Pdb.get(nameD);
+        }
+        return null;
     }
-    public void saveMovie(Movie movie){
-        movieMap.put(movie.getName(), movie);
+    public List<String> findAllMovies()
+    {
+        List<String>allmovie=new ArrayList<>();
+        for(String m:Mdb.keySet())
+        {
+            allmovie.add(m);
+        }
+        return allmovie;
     }
-    public void saveDirector(Director director){
-        directorMap.put(director.getName(), director);
-    }
-    public void saveMovieDirectorPair(String movie,String director){
-        if(movieMap.containsKey(movie)&&directorMap.containsKey(director)){
-            List<String>movieList=new ArrayList<String>();
-            if(movieDirector.containsKey(director)){
-                movieList=movieDirector.get(director);
-            }else{
-                movieList.add(movie);
-                movieDirector.put(director,movieList);
+    public String deleteDirectorByName(String nameD)
+    {
+        List<String>ml=new ArrayList<>();
+        if(Pdb.containsKey(nameD))
+        {
+            ml=Pdb.get(nameD);
+        }
+        for(String movie:ml)
+        {
+            if(Mdb.containsKey(movie))
+            {
+                Mdb.remove(movie);
             }
         }
-    }
-    public Movie findMovie(String movie){
-        return movieMap.get(movie);
-    }
-    public Director findDirector(String director){
-        return directorMap.get(director);
-    }
-    public List<String> findMoviesDirector(String director){
-        List<String>movielist=new ArrayList<String>();
-        if(movieDirector.containsKey(director)){
-            movielist=movieDirector.get(director);
+        Pdb.remove(nameD);
+        if(Ddb.containsKey(nameD))
+        {
+            Ddb.remove(nameD);
         }
-        return movielist;
+        return "Director and its movies removed successfully";
     }
-    public List<String> findAllMovies(){
-        List<String>movielist=new ArrayList<String>();
-        return new ArrayList<>(movieMap.keySet());
-    }
-    public void deleteDirector(String director){
-        List<String>movies=new ArrayList<String>();
-        if(movieDirector.containsKey(director)){
-            movies=movieDirector.get(director);
-            for(String movie:movies){
-                if(movieMap.containsKey(movie)) {
-                    movieMap.remove(movie);
+    public String deleteAllDirectors()
+    {
+        for(String D:Pdb.keySet())
+        {
+            List<String>dml=new ArrayList<>();
+            dml=Pdb.get(D);
+            for(String movie:dml)
+            {
+                if(Mdb.containsKey(movie))
+                {
+                    Mdb.remove(movie);
                 }
             }
-            movieDirector.remove(director);
+            Pdb.remove(D);
         }
-        if(directorMap.containsKey(director)){
-            directorMap.remove(director);
+        for(String D:Ddb.keySet())
+        {
+            Ddb.remove(D);
         }
+        return "All directors and all of their movies removed successfully";
 
     }
-    public void deleteAll(){
-        HashSet<String>rem=new HashSet<String>();
-        for(String director:movieDirector.keySet()){
-            for(String movie:movieDirector.get(director)){
-                rem.add(movie);
-            }
-        }
-        for(String movie:rem){
-            if(movieMap.containsKey(movie)){
-                movieMap.remove(movie);
-            }
-        }
-    }
+
 
 }
